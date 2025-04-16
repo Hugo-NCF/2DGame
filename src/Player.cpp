@@ -4,11 +4,11 @@
 Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true) {}
 
 void Player::init() {
-    if (!idleTexture.loadFromFile("Soldier_1/Idle.png")) {
+    if (!idleTexture.loadFromFile("Assets/Player/Idle.png")) {
         std::cerr << "Error loading idle texture" << std::endl;
         return;
     }
-    if (!runTexture.loadFromFile("Soldier_1/Run.png")) {
+    if (!runTexture.loadFromFile("Assets/Player/Run.png")) {
         std::cerr << "Error loading run texture" << std::endl;
         return;
     }

@@ -15,7 +15,7 @@ int main() {
 
     // Load background texture
     Texture backgroundTexture;
-    if (!backgroundTexture.loadFromFile("Map/background.png"))
+    if (!backgroundTexture.loadFromFile("Assets/Backgrounds/background.png"))
     {
         return -1; // error loading background
     }
