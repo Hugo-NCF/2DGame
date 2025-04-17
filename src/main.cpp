@@ -40,7 +40,7 @@ int main() {
     
     // Font for UI
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf")) {
+    if (!font.loadFromFile("Assets/pixelFont.ttf")) {
         cout << "Failed to load font!" << endl;
         // Proceed without font
     }
