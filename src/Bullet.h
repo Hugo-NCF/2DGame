@@ -1,16 +1,17 @@
 #ifndef BULLET_H
 #define BULLET_H
 #include <SFML/Graphics.hpp>
-#include <vector>
 
 class Bullet {
 public:
+    Bullet();
     Bullet(float x, float y, float speed, bool facingRight);
     void update(float deltaTime);
     void render(sf::RenderWindow& window);
     bool isActive() const;
     void setActive(bool active);
     sf::FloatRect getBounds() const;
+    void reset(float x, float y, float speed, bool facingRight);
 
 private:
     sf::RectangleShape shape;
@@ -22,6 +23,7 @@ private:
 class BulletManager {
 public:
     BulletManager(int maxBullets = 20);
+    ~BulletManager();
     void fireBullet(float x, float y, bool facingRight);
     void update(float deltaTime);
     void render(sf::RenderWindow& window);
@@ -29,7 +31,7 @@ public:
     void reload();
 
 private:
-    std::vector<Bullet> bullets;
+    Bullet* bullets;
     int maxBullets;
     int remainingBullets;
 };
