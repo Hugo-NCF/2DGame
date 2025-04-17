@@ -1,7 +1,7 @@
 #include "Player.h"
 #include <iostream>
 
-Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true), isShooting(false), shootingTimer(0.0f) {}
+Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true), isShooting(false), shootingTimer(0.0f), isReloading(false), reloadingTimer(0.0f), reloadKeyPressed(false) {}
 
 void Player::init() {
     if (!idleTexture.loadFromFile("Assets/Player/Idle.png")) {
@@ -16,6 +16,10 @@ void Player::init() {
         std::cerr << "Error loading shoot texture" << std::endl;
         return;
     }
+    if (!reloadTexture.loadFromFile("Assets/Player/Recharge.png")) {
+        std::cerr << "Error loading reload texture" << std::endl;
+        return;
+    }
 
     playerSprite.setScale(3.0f, 3.0f);
     playerSprite.setPosition(400, 300);
@@ -24,6 +28,7 @@ void Player::init() {
     idleFrameRect = sf::IntRect(0, 0, 128, 128);
     runFrameRect = sf::IntRect(0, 0, 128, 128);
     shootFrameRect = sf::IntRect(0, 0, 128, 128);
+    reloadFrameRect = sf::IntRect(0, 0, 128, 128);
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
 }
@@ -61,7 +66,16 @@ void Player::update(float deltaTime) {
 
     // Handle shooting key
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        setShootingAnimation(true);
+        if (!isReloading) {
+            setShootingAnimation(true);
+        }
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed) {
+        setReloadingAnimation(true);
+        reloadKeyPressed = true;
+    }
+    if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
+        reloadKeyPressed = false;
     }
 
     // Stop shooting after timer
@@ -69,7 +83,14 @@ void Player::update(float deltaTime) {
         shootingTimer += deltaTime;
         if (shootingTimer > 0.2f) {
             shootingTimer = 0.0f;
-            setShootingAnimation(false);  // Will fallback to run/idle depending on state
+            setShootingAnimation(false);
+        }
+    }
+    if (isReloading) {
+        reloadingTimer += deltaTime;
+        if (reloadingTimer > 2.0f) {
+            reloadingTimer = 0.0f;
+            setReloadingAnimation(false);
         }
     }
 
@@ -84,6 +105,9 @@ void Player::update(float deltaTime) {
     sf::IntRect* currentRect;
     if (isShooting) {
         currentRect = &shootFrameRect;
+    }
+    else if (isReloading) {
+        currentRect = &reloadFrameRect;
     }
     else if (isRunning) {
         currentRect = &runFrameRect;
@@ -110,10 +134,9 @@ void Player::setRunningAnimation(bool isRunning) {
         }
         currentFrame = 0; // Reset to the first frame of the new animation
     } else if (isShooting) {
-        playerSprite.setTexture(shootTexture);
-        frameCount = 2;
-        frameDuration = 0.1f;
-        currentFrame = 0;
+        return;
+    } else if (isReloading) {
+        return;
     }
 }
 
@@ -137,7 +160,11 @@ bool Player::isFacingRight() const {
     return facingRight;
 }
 
+
 void Player::setShootingAnimation(bool isShooting) {
+    if (isReloading) {
+        return;
+    }
     if (this->isShooting != isShooting) {
         this->isShooting = isShooting;
         if (isShooting) {
@@ -146,7 +173,6 @@ void Player::setShootingAnimation(bool isShooting) {
             frameDuration = 0.1f;
         }
         else {
-            // Restore correct texture based on running state
             if (isRunning) {
                 playerSprite.setTexture(runTexture);
                 frameCount = 6;
@@ -158,6 +184,30 @@ void Player::setShootingAnimation(bool isShooting) {
                 frameDuration = 0.15f;
             }
         }
-        currentFrame = 0; // Reset to the first frame of the new animation
+        currentFrame = 0;
+    }
+}
+
+void Player::setReloadingAnimation(bool isReloading) {
+    if (this->isReloading != isReloading) {
+        this->isReloading = isReloading;
+        if (isReloading) {
+            playerSprite.setTexture(reloadTexture);
+            frameCount = 4;
+            frameDuration = 0.1f;
+        }
+        else {
+            if (isRunning) {
+                playerSprite.setTexture(runTexture);
+                frameCount = 6;
+                frameDuration = 0.08f;
+            }
+            else {
+                playerSprite.setTexture(idleTexture);
+                frameCount = 4;
+                frameDuration = 0.15f;
+            }
+        }
+        currentFrame = 0;
     }
 }
