@@ -30,9 +30,15 @@ private:
     float speed;
     bool isShooting;
     float shootingTimer;
+    bool isReloading;
+    float reloadingTimer;
     sf::Texture shootTexture;
+    sf::Texture reloadTexture;
+    sf::IntRect reloadFrameRect;
+    bool reloadKeyPressed;
 public:
     void setShootingAnimation(bool isShooting);
+    void setReloadingAnimation(bool isReloading);
 };
 
 #endif
