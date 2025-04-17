@@ -29,7 +29,6 @@ void Player::init() {
 }
 
 void Player::update(float deltaTime) {
-    // Handle player movement (AD controls)
     bool moving = false;
     sf::Vector2f currentPosition = playerSprite.getPosition();
     float leftBounds = 128 * 2;
@@ -58,40 +57,43 @@ void Player::update(float deltaTime) {
         }
     }
 
-    // Animate the player character
+    setRunningAnimation(moving); // Update running state first
+
+    // Handle shooting key
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        setShootingAnimation(true);
+    }
+
+    // Stop shooting after timer
+    if (isShooting) {
+        shootingTimer += deltaTime;
+        if (shootingTimer > 0.2f) {
+            shootingTimer = 0.0f;
+            setShootingAnimation(false);  // Will fallback to run/idle depending on state
+        }
+    }
+
+    // Animate
     frameTimer += deltaTime;
     if (frameTimer >= frameDuration) {
         frameTimer = 0.0f;
         currentFrame = (currentFrame + 1) % frameCount;
     }
 
-    sf::IntRect& currentRect = isShooting ? shootFrameRect : isRunning ? runFrameRect : idleFrameRect;
-    currentRect.left = currentFrame * 128;
-    playerSprite.setTextureRect(currentRect);
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        setShootingAnimation(true);
-    }
-
+    // Decide which frameRect to use
+    sf::IntRect* currentRect;
     if (isShooting) {
-        shootingTimer += deltaTime;
-        if (shootingTimer > 0.2f) {
-            shootingTimer = 0.0f;
-            setShootingAnimation(false);
-        }
+        currentRect = &shootFrameRect;
     }
-   moving = false;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        
-            moving = true;
-        
+    else if (isRunning) {
+        currentRect = &runFrameRect;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        
-            moving = true;
-        
+    else {
+        currentRect = &idleFrameRect;
     }
-    setRunningAnimation(moving);
+
+    currentRect->left = currentFrame * 128;
+    playerSprite.setTextureRect(*currentRect);
 }
 
 void Player::setRunningAnimation(bool isRunning) {
@@ -142,10 +144,19 @@ void Player::setShootingAnimation(bool isShooting) {
             playerSprite.setTexture(shootTexture);
             frameCount = 2;
             frameDuration = 0.1f;
-        } else {
-            playerSprite.setTexture(idleTexture);
-            frameCount = 4;
-            frameDuration = 0.15f;
+        }
+        else {
+            // Restore correct texture based on running state
+            if (isRunning) {
+                playerSprite.setTexture(runTexture);
+                frameCount = 6;
+                frameDuration = 0.08f;
+            }
+            else {
+                playerSprite.setTexture(idleTexture);
+                frameCount = 4;
+                frameDuration = 0.15f;
+            }
         }
         currentFrame = 0; // Reset to the first frame of the new animation
     }
