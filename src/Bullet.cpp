@@ -49,7 +49,7 @@ void Bullet::reset(float x, float y, float speed, bool facingRight) {
     this->speed = speed;
     this->active = true;
     this->facingRight = facingRight;
-    shape.setPosition(x, y);
+    shape.setPosition(x - 28, y - 18);
 }
 
 // BulletManager implementation
