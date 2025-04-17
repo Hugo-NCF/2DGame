@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "Bullet.h"
 
+#include <sstream>
 using namespace std;
 using namespace sf;
 
@@ -79,11 +80,11 @@ int main() {
         // Handle shooting
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot) {
             // Get player position and direction
-            float bulletX = player.isFacingRight() ? 
-                player.getPosition().x + player.getSize().x : 
-                player.getPosition().x;
-            float bulletY = player.getPosition().y + player.getSize().y / 2;
-            
+            float bulletX = player.isFacingRight() ?
+                player.getPosition().x + player.getSize().x - 10.0f :
+                player.getPosition().x - player.getSize().x + 10.0f;
+            float bulletY = player.getPosition().y + player.getSize().y / 1.5;
+
             bulletManager.fireBullet(bulletX, bulletY, player.isFacingRight());
             canShoot = false;
         }

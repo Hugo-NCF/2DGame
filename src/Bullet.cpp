@@ -21,7 +21,7 @@ void Bullet::update(float deltaTime) {
         shape.move(direction * speed * deltaTime, 0);
 
         // Check if bullet is off-screen
-        if (shape.getPosition().x < 0 || shape.getPosition().x > 800) {
+        if (shape.getPosition().x < 0 || shape.getPosition().x > 1280) {
             active = false;
         }
     }
