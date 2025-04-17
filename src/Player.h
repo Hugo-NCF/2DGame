@@ -11,7 +11,9 @@ public:
     void draw(sf::RenderWindow& window);
     sf::Sprite& getSprite();
     void setRunningAnimation(bool isRunning);
-
+    sf::Vector2f getPosition() const;
+    sf::Vector2f getSize() const;
+    bool isFacingRight() const;
 private:
     sf::Texture idleTexture;
     sf::Texture runTexture;
@@ -24,8 +26,13 @@ private:
     bool facingRight;
     sf::IntRect idleFrameRect;
     sf::IntRect runFrameRect;
-    sf::IntRect frameRect;
+    sf::IntRect shootFrameRect;
     float speed;
+    bool isShooting;
+    float shootingTimer;
+    sf::Texture shootTexture;
+public:
+    void setShootingAnimation(bool isShooting);
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "Player.h"
 #include <iostream>
 
-Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true) {}
+Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true), isShooting(false), shootingTimer(0.0f) {}
 
 void Player::init() {
     if (!idleTexture.loadFromFile("Assets/Player/Idle.png")) {
@@ -12,6 +12,10 @@ void Player::init() {
         std::cerr << "Error loading run texture" << std::endl;
         return;
     }
+    if (!shootTexture.loadFromFile("Assets/Player/Shot_2.png")) {
+        std::cerr << "Error loading shoot texture" << std::endl;
+        return;
+    }
 
     playerSprite.setScale(3.0f, 3.0f);
     playerSprite.setPosition(400, 300);
@@ -19,6 +23,7 @@ void Player::init() {
     // Initialize idle animation
     idleFrameRect = sf::IntRect(0, 0, 128, 128);
     runFrameRect = sf::IntRect(0, 0, 128, 128);
+    shootFrameRect = sf::IntRect(0, 0, 128, 128);
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
 }
@@ -53,18 +58,40 @@ void Player::update(float deltaTime) {
         }
     }
 
-   setRunningAnimation(moving);
-
     // Animate the player character
     frameTimer += deltaTime;
     if (frameTimer >= frameDuration) {
         frameTimer = 0.0f;
         currentFrame = (currentFrame + 1) % frameCount;
-
-        sf::IntRect& currentRect = isRunning ? runFrameRect : idleFrameRect;
-        currentRect.left = currentFrame * 128;
-        playerSprite.setTextureRect(currentRect);
     }
+
+    sf::IntRect& currentRect = isShooting ? shootFrameRect : isRunning ? runFrameRect : idleFrameRect;
+    currentRect.left = currentFrame * 128;
+    playerSprite.setTextureRect(currentRect);
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        setShootingAnimation(true);
+    }
+
+    if (isShooting) {
+        shootingTimer += deltaTime;
+        if (shootingTimer > 0.2f) {
+            shootingTimer = 0.0f;
+            setShootingAnimation(false);
+        }
+    }
+   moving = false;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        
+            moving = true;
+        
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        
+            moving = true;
+        
+    }
+    setRunningAnimation(moving);
 }
 
 void Player::setRunningAnimation(bool isRunning) {
@@ -80,6 +107,11 @@ void Player::setRunningAnimation(bool isRunning) {
             frameDuration = 0.15f;
         }
         currentFrame = 0; // Reset to the first frame of the new animation
+    } else if (isShooting) {
+        playerSprite.setTexture(shootTexture);
+        frameCount = 2;
+        frameDuration = 0.1f;
+        currentFrame = 0;
     }
 }
 
@@ -89,4 +121,32 @@ void Player::draw(sf::RenderWindow& window) {
 
 sf::Sprite& Player::getSprite() {
     return playerSprite;
+}
+
+sf::Vector2f Player::getPosition() const {
+    return playerSprite.getPosition();
+}
+
+sf::Vector2f Player::getSize() const {
+    return sf::Vector2f(playerSprite.getGlobalBounds().width, playerSprite.getGlobalBounds().height);
+}
+
+bool Player::isFacingRight() const {
+    return facingRight;
+}
+
+void Player::setShootingAnimation(bool isShooting) {
+    if (this->isShooting != isShooting) {
+        this->isShooting = isShooting;
+        if (isShooting) {
+            playerSprite.setTexture(shootTexture);
+            frameCount = 2;
+            frameDuration = 0.1f;
+        } else {
+            playerSprite.setTexture(idleTexture);
+            frameCount = 4;
+            frameDuration = 0.15f;
+        }
+        currentFrame = 0; // Reset to the first frame of the new animation
+    }
 }
