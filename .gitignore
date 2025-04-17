@@ -56,3 +56,11 @@ sfml-*.dll
 
 # Ignore temporary files
 *.log
+
+# Ignore Visual Studio project files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Ignore DLLs (e.g. openal32.dll, unless you want to track them)
+*.dll
