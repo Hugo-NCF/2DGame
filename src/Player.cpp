@@ -24,7 +24,7 @@ void Player::init() {
 }
 
 void Player::update(float deltaTime) {
-    // Handle player movement (WASD controls)
+    // Handle player movement (AD controls)
     bool moving = false;
     sf::Vector2f currentPosition = playerSprite.getPosition();
     float leftBounds = 128 * 2;
