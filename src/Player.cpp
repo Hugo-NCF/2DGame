@@ -31,6 +31,17 @@ void Player::init() {
     reloadFrameRect = sf::IntRect(0, 0, 128, 128);
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
+
+    // Load sounds
+    if (!shootBuffer.loadFromFile("Assets/shoot.mp3")) {
+        std::cerr << "Error loading shoot sound" << std::endl;
+    }
+    shootSound.setBuffer(shootBuffer);
+
+    if (!reloadBuffer.loadFromFile("Assets/reload.mp3")) {
+        std::cerr << "Error loading reload sound" << std::endl;
+    }
+    reloadSound.setBuffer(reloadBuffer);
 }
 
 void Player::update(float deltaTime) {
@@ -65,14 +76,20 @@ void Player::update(float deltaTime) {
     setRunningAnimation(moving); // Update running state first
 
     // Handle shooting key
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        if (!isReloading) {
+    // Handle shooting key
+    if (isReloading) { // Prevent shooting while reloading
+        // Do nothing if reloading
+    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        if (!isShooting) { // Only shoot if not already shooting
             setShootingAnimation(true);
+            shootSound.play(); // Play shoot sound
         }
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed) {
+    
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed && !isReloading) { // Only reload if not already reloading
         setReloadingAnimation(true);
         reloadKeyPressed = true;
+        reloadSound.play(); // Play reload sound
     }
     if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
         reloadKeyPressed = false;
@@ -87,9 +104,8 @@ void Player::update(float deltaTime) {
         }
     }
     if (isReloading) {
-        reloadingTimer += deltaTime;
-        if (reloadingTimer > 2.0f) {
-            reloadingTimer = 0.0f;
+        // Check if reload sound has finished playing
+        if (reloadSound.getStatus() == sf::Sound::Stopped) {
             setReloadingAnimation(false);
         }
     }
@@ -160,6 +176,9 @@ bool Player::isFacingRight() const {
     return facingRight;
 }
 
+bool Player::getIsReloading() const { // Implementation of the getter
+    return isReloading;
+}
 
 void Player::setShootingAnimation(bool isShooting) {
     if (isReloading) {

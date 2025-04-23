@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 class Player {
 public:
@@ -36,9 +37,15 @@ private:
     sf::Texture reloadTexture;
     sf::IntRect reloadFrameRect;
     bool reloadKeyPressed;
+
+    sf::SoundBuffer shootBuffer;
+    sf::Sound shootSound;
+    sf::SoundBuffer reloadBuffer;
+    sf::Sound reloadSound;
 public:
     void setShootingAnimation(bool isShooting);
     void setReloadingAnimation(bool isReloading);
+    bool getIsReloading() const; // Add getter for isReloading
 };
 
 #endif
