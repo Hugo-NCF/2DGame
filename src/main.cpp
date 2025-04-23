@@ -88,7 +88,7 @@ int main() {
         
         player.update(deltaTime);
         
-        // Handle shooting
+        
         // Handle shooting
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot && !player.getIsReloading()) { // Add check for reloading
             // Get player position and direction
