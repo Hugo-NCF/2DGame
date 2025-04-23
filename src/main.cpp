@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
+#include <SFML/Audio.hpp> // Include SFML Audio
 #include "Player.h"
 #include "Bullet.h"
 
@@ -30,6 +31,16 @@ int main() {
     backgroundSprite.setScale(scaleX, scaleY);
     Player player;
     player.init();
+    
+    // Load and play background music
+    sf::Music backgroundMusic;
+    if (!backgroundMusic.openFromFile("Assets/Damned.mp3")) {
+        std::cerr << "Error loading background music" << std::endl;
+        // Handle error or continue without music
+    } else {
+        backgroundMusic.setLoop(true); // Set music to loop
+        backgroundMusic.play(); // Start playing music
+    }
     
     // Create bullet manager
     BulletManager bulletManager(20);
@@ -78,7 +89,8 @@ int main() {
         player.update(deltaTime);
         
         // Handle shooting
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot) {
+        // Handle shooting
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot && !player.getIsReloading()) { // Add check for reloading
             // Get player position and direction
             float bulletX = player.isFacingRight() ?
                 player.getPosition().x + player.getSize().x - 10.0f :
