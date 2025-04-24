@@ -3,49 +3,56 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include "Hitbox.h"
 
 class Player {
 public:
     Player();
+
     void init();
     void update(float deltaTime);
     void draw(sf::RenderWindow& window);
     sf::Sprite& getSprite();
-    void setRunningAnimation(bool isRunning);
     sf::Vector2f getPosition() const;
     sf::Vector2f getSize() const;
     bool isFacingRight() const;
+    bool getIsReloading() const;
+
 private:
+    void setRunningAnimation(bool isRunning);
+    void setShootingAnimation(bool isShooting);
+    void setReloadingAnimation(bool isReloading);
+
+    sf::Sprite playerSprite;
     sf::Texture idleTexture;
     sf::Texture runTexture;
-    sf::Sprite playerSprite;
+    sf::Texture shootTexture;
+    sf::Texture reloadTexture;
+
+    sf::IntRect idleFrameRect;
+    sf::IntRect runFrameRect;
+    sf::IntRect shootFrameRect;
+    sf::IntRect reloadFrameRect;
+
+    Hitbox hitbox;  // Custom hitbox for the player
+    sf::SoundBuffer shootSoundBuffer;
+    sf::Sound shootSound;
+    sf::SoundBuffer reloadSoundBuffer;
+    sf::Sound reloadSound;
+
     int frameCount;
     int currentFrame;
     float frameDuration;
     float frameTimer;
+
+    float speed;
     bool isRunning;
     bool facingRight;
-    sf::IntRect idleFrameRect;
-    sf::IntRect runFrameRect;
-    sf::IntRect shootFrameRect;
-    float speed;
     bool isShooting;
-    float shootingTimer;
     bool isReloading;
-    float reloadingTimer;
-    sf::Texture shootTexture;
-    sf::Texture reloadTexture;
-    sf::IntRect reloadFrameRect;
     bool reloadKeyPressed;
-
-    sf::SoundBuffer shootBuffer;
-    sf::Sound shootSound;
-    sf::SoundBuffer reloadBuffer;
-    sf::Sound reloadSound;
-public:
-    void setShootingAnimation(bool isShooting);
-    void setReloadingAnimation(bool isReloading);
-    bool getIsReloading() const; // Add getter for isReloading
+    float shootingTimer;
+    float reloadingTimer;
 };
 
 #endif

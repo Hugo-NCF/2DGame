@@ -74,12 +74,16 @@ void BulletManager::fireBullet(float x, float y, bool facingRight) {
     // Find an inactive bullet to reuse
     for (int i = 0; i < maxBullets; i++) {
         if (!bullets[i].isActive()) {
-            bullets[i].reset(x, y, 600.f, facingRight);
+            // Adjust bullet spawn position based on player’s position and facing direction
+            float bulletOffsetX = facingRight ? -254.f : 254.f; // Adjust this based on where you want the bullet to appear
+            float bulletOffsetY = -197.f; // Adjust based on the height of the player’s weapon or shooting point
+
+            bullets[i].reset(x + bulletOffsetX, y + bulletOffsetY, 600.f, facingRight);
             remainingBullets--;
             return;
         }
     }
-    
+
     // If we get here, all bullets are active (shouldn't happen with proper management)
     std::cout << "No inactive bullets available!" << std::endl;
 }

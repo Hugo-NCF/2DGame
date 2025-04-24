@@ -1,7 +1,23 @@
 #include "Player.h"
+#include "Hitbox.h" // Include Hitbox class
 #include <iostream>
 
-Player::Player() : frameCount(6), currentFrame(0), frameDuration(0.10f), frameTimer(0.0f), speed(300.0f), isRunning(false), facingRight(true), isShooting(false), shootingTimer(0.0f), isReloading(false), reloadingTimer(0.0f), reloadKeyPressed(false) {}
+Player::Player() :
+    frameCount(6),
+    currentFrame(0),
+    frameDuration(0.10f),
+    frameTimer(0.0f),
+    speed(300.0f),
+    isRunning(false),
+    facingRight(true),
+    isShooting(false),
+    shootingTimer(0.0f),
+    isReloading(false),
+    reloadingTimer(0.0f),
+    reloadKeyPressed(false),
+    hitbox(sf::Vector2f(100.0f, 164.0f))  // Initialize the hitbox with a custom size (e.g., 100x128)
+{
+}
 
 void Player::init() {
     if (!idleTexture.loadFromFile("Assets/Player/Idle.png")) {
@@ -21,10 +37,14 @@ void Player::init() {
         return;
     }
 
-    playerSprite.setScale(3.0f, 3.0f);
-    playerSprite.setPosition(400, 300);
+    // Set the origin to center of 128x128 texture before scaling
+    playerSprite.setOrigin(64.f, 64.f); // Center of the sprite (128 / 2)
 
-    // Initialize idle animation
+    // Scale and position the sprite
+    playerSprite.setScale(3.0f, 3.0f);
+    playerSprite.setPosition(400, 300 + 128.0f * 3.0f / 2.0f); // This sets his feet to the ground
+
+    // Initialize animation frame rectangles
     idleFrameRect = sf::IntRect(0, 0, 128, 128);
     runFrameRect = sf::IntRect(0, 0, 128, 128);
     shootFrameRect = sf::IntRect(0, 0, 128, 128);
@@ -32,16 +52,9 @@ void Player::init() {
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
 
-    // Load sounds
-    if (!shootBuffer.loadFromFile("Assets/shoot.mp3")) {
-        std::cerr << "Error loading shoot sound" << std::endl;
-    }
-    shootSound.setBuffer(shootBuffer);
+    // Position hitbox at same center
+    hitbox.setPosition(playerSprite.getPosition().x, playerSprite.getPosition().y + 128.0f * 3.0f / 2.0f);
 
-    if (!reloadBuffer.loadFromFile("Assets/reload.mp3")) {
-        std::cerr << "Error loading reload sound" << std::endl;
-    }
-    reloadSound.setBuffer(reloadBuffer);
 }
 
 void Player::update(float deltaTime) {
@@ -50,6 +63,7 @@ void Player::update(float deltaTime) {
     float leftBounds = 128 * 2;
     float rightBounds = 1280 - 128 * 2;
 
+    // Moving logic for A and D keys
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
         if (currentPosition.x > leftBounds) {
             playerSprite.move(-speed * deltaTime, 0);
@@ -57,8 +71,7 @@ void Player::update(float deltaTime) {
         }
         if (facingRight) {
             facingRight = false;
-            playerSprite.setScale(-3.0f, 3.0f);
-            playerSprite.move(128.0f * 3.0f, 0);
+            playerSprite.setScale(-3.0f, 3.0f);  // Flip the sprite without moving it
         }
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
@@ -68,28 +81,27 @@ void Player::update(float deltaTime) {
         }
         if (!facingRight) {
             facingRight = true;
-            playerSprite.setScale(3.0f, 3.0f);
-            playerSprite.move(-128.0f * 3.0f, 0);
+            playerSprite.setScale(3.0f, 3.0f);  // Flip the sprite without moving it
         }
     }
 
-    setRunningAnimation(moving); // Update running state first
+    setRunningAnimation(moving);
 
     // Handle shooting key
-    // Handle shooting key
-    if (isReloading) { // Prevent shooting while reloading
+    if (isReloading) {
         // Do nothing if reloading
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        if (!isShooting) { // Only shoot if not already shooting
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        if (!isShooting) {
             setShootingAnimation(true);
-            shootSound.play(); // Play shoot sound
+            shootSound.play();
         }
     }
-    
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed && !isReloading) { // Only reload if not already reloading
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed && !isReloading) {
         setReloadingAnimation(true);
         reloadKeyPressed = true;
-        reloadSound.play(); // Play reload sound
+        reloadSound.play();
     }
     if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
         reloadKeyPressed = false;
@@ -103,8 +115,8 @@ void Player::update(float deltaTime) {
             setShootingAnimation(false);
         }
     }
+
     if (isReloading) {
-        // Check if reload sound has finished playing
         if (reloadSound.getStatus() == sf::Sound::Stopped) {
             setReloadingAnimation(false);
         }
@@ -116,6 +128,9 @@ void Player::update(float deltaTime) {
         frameTimer = 0.0f;
         currentFrame = (currentFrame + 1) % frameCount;
     }
+
+    // Update hitbox position to match sprite's position + adjusted for sprite height
+    hitbox.setPosition(playerSprite.getPosition().x, playerSprite.getPosition().y + playerSprite.getLocalBounds().height / 2.0f);
 
     // Decide which frameRect to use
     sf::IntRect* currentRect;
@@ -143,21 +158,27 @@ void Player::setRunningAnimation(bool isRunning) {
             playerSprite.setTexture(runTexture);
             frameCount = 6;
             frameDuration = 0.08f;
-        } else {
+        }
+        else {
             playerSprite.setTexture(idleTexture);
             frameCount = 4;
             frameDuration = 0.15f;
         }
-        currentFrame = 0; // Reset to the first frame of the new animation
-    } else if (isShooting) {
+        currentFrame = 0;
+    }
+    else if (isShooting) {
         return;
-    } else if (isReloading) {
+    }
+    else if (isReloading) {
         return;
     }
 }
 
 void Player::draw(sf::RenderWindow& window) {
     window.draw(playerSprite);
+
+    // Draw hitbox for debugging
+    hitbox.draw(window);
 }
 
 sf::Sprite& Player::getSprite() {
@@ -176,7 +197,7 @@ bool Player::isFacingRight() const {
     return facingRight;
 }
 
-bool Player::getIsReloading() const { // Implementation of the getter
+bool Player::getIsReloading() const {
     return isReloading;
 }
 

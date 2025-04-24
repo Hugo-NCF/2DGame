@@ -4,6 +4,7 @@
 #include <SFML/Audio.hpp> // Include SFML Audio
 #include "Player.h"
 #include "Bullet.h"
+#include "Enemy.h"
 
 #include <sstream>
 using namespace std;
@@ -42,8 +43,9 @@ int main() {
         backgroundMusic.play(); // Start playing music
     }
     
-    // Create bullet manager
+    // Create bullet manager and enemy manager
     BulletManager bulletManager(20);
+    EnemyManager enemyManager;
     
     // Variables for shooting control
     bool canShoot = true;
@@ -107,8 +109,9 @@ int main() {
             canReload = false;
         }
         
-        // Update bullets
+        // Update bullets and enemies
         bulletManager.update(deltaTime);
+        enemyManager.update(deltaTime, player.getPosition());
         
         // Update ammo display
         std::stringstream ss;
@@ -123,6 +126,8 @@ int main() {
         player.draw(window);
         // Draw bullets
         bulletManager.render(window);
+        //Draw the enemy
+        enemyManager.render(window);
         // Draw UI
         window.draw(ammoText);
         // Display everything
