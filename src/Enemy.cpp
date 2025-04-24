@@ -5,7 +5,7 @@
 #include <random>
 
 Enemy::Enemy() :
-    currentState(EnemyState::IDLE),
+    currentState(IDLE),
     facingRight(false),
     speed(100.0f),
     health(100.0f),
@@ -21,6 +21,8 @@ Enemy::Enemy() :
     attackCooldown(1.0f),
     attackTimer(0.0f),
     isDeathAnimationFinished(false),
+    deathRemoveTimer(0.0f),
+    deathRemoveDelay(1.5f), // 1.5 second delay after death animation
     hitbox(nullptr)
 {
 }
@@ -63,14 +65,17 @@ void Enemy::initSprite() {
     sprite.setPosition(position);
 
     // Initial scale
-    sprite.setScale(1.0f, 1.0f);
+    // Apply scale
+    sprite.setScale(3.0f, 3.0f);
+    // Adjust x-scale for horizontal flipping
     if (!facingRight) {
-        sprite.setScale(3.0f, 3.0f);
+        sprite.setScale(-3.0f, 3.0f);
     }
 }
 
-void Enemy::init(float startX, bool spawnOnRight) {
-    position = sf::Vector2f(startX, 600.0f); // Ground level
+void Enemy::init(float startX, float playerY, bool spawnOnRight) {
+    // Calculate initial position with y-offset to align feet with player
+    position = sf::Vector2f(startX, playerY + frameHeight * 3.0f / 2.0f);
     facingRight = !spawnOnRight; // Face toward center
 
     loadTextures();
@@ -81,7 +86,7 @@ void Enemy::init(float startX, bool spawnOnRight) {
     hitbox->setPosition(position.x, position.y - 50.0f);
 
     // Initialize animation for idle
-    currentState = EnemyState::IDLE;
+    currentState = IDLE;
     totalFrames = 15; // Idle animation frames (adjust based on your spritesheet)
     currentFrame = 0;
     animationTimer = 0.0f;
@@ -90,8 +95,8 @@ void Enemy::init(float startX, bool spawnOnRight) {
 void Enemy::update(float deltaTime, const sf::Vector2f& playerPosition) {
     if (!isAlive()) {
         // Handle death animation
-        if (currentState != EnemyState::DEAD) {
-            currentState = EnemyState::DEAD;
+        if (currentState != DEAD) {
+            currentState = DEAD;
             currentFrame = 0;
             animationTimer = 0.0f;
             totalFrames = 12; // Death animation frames
@@ -102,7 +107,7 @@ void Enemy::update(float deltaTime, const sf::Vector2f& playerPosition) {
         updateState(playerPosition);
 
         // Move enemy based on state
-        if (currentState == EnemyState::WALKING) {
+        if (currentState == WALKING) {
             float moveDirection = facingRight ? 1.0f : -1.0f;
             position.x += speed * moveDirection * deltaTime;
         }
@@ -123,6 +128,11 @@ void Enemy::update(float deltaTime, const sf::Vector2f& playerPosition) {
     // Update animation
     updateAnimation(deltaTime);
 
+    // Update death remove timer if death animation is finished
+    if (isDeathAnimationFinished) {
+        deathRemoveTimer += deltaTime;
+    }
+
     // Update sprite position
     sprite.setPosition(position);
 
@@ -138,27 +148,67 @@ void Enemy::updateState(const sf::Vector2f& playerPosition) {
     if (distanceToPlayer <= attackRange) {
         // Player is in attack range
         if (attackTimer <= 0) {
-            currentState = EnemyState::ATTACKING;
+            currentState = ATTACKING;
             attackTimer = attackCooldown;
-
-            // Reset animation for attack
-            currentFrame = 0;
-            animationTimer = 0.0f;
+            currentFrame = 0; // Reset animation frame
+            animationTimer = 0.0f; // Reset animation timer
             totalFrames = 8; // Attack animation frames
+            frameDuration = 0.1f; // Default duration for attack animation
+            sprite.setTexture(attackTexture); // Set texture immediately
+            sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight)); // Set initial frame
+            // Reapply scale
+            sprite.setScale(3.0f, 3.0f);
+            if (!facingRight) {
+                sprite.setScale(-3.0f, 3.0f);
+            }
         }
-        else if (currentState != EnemyState::ATTACKING) {
-            currentState = EnemyState::IDLE;
+        else if (currentState != ATTACKING) {
+            currentState = IDLE;
+            currentFrame = 0; // Reset animation frame
+            animationTimer = 0.0f; // Reset animation timer
+            frameDuration = 0.1f; // Default duration for idle
+            sprite.setTexture(idleTexture); // Set texture immediately
+            sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight)); // Set initial frame
+            // Reapply scale
+            sprite.setScale(3.0f, 3.0f);
+            if (!facingRight) {
+                sprite.setScale(-3.0f, 3.0f);
+            }
         }
     }
     else if (distanceToPlayer <= detectionRange) {
         // Player is detected but not in attack range
-        currentState = EnemyState::WALKING;
-        totalFrames = 10; // Walk animation frames
+        if (currentState != WALKING) { // Only reset if changing to WALKING
+            currentState = WALKING;
+            currentFrame = 0; // Reset animation frame
+            animationTimer = 0.0f; // Reset animation timer
+            totalFrames = 10; // Walk animation frames
+            frameDuration = 0.1f; // Default duration for walking
+            sprite.setTexture(walkTexture); // Set texture immediately
+            sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight)); // Set initial frame
+            // Reapply scale
+            sprite.setScale(3.0f, 3.0f);
+            if (!facingRight) {
+                sprite.setScale(-3.0f, 3.0f);
+            }
+        }
     }
     else {
         // Player is not detected
-        currentState = EnemyState::IDLE;
-        totalFrames = 15; // Idle animation frames
+        if (currentState != IDLE) { // Only reset if changing to IDLE
+            currentState = IDLE;
+            currentFrame = 0; // Reset animation frame
+            animationTimer = 0.0f; // Reset animation timer
+            totalFrames = 15; // Idle animation frames
+            frameDuration = 0.1f; // Default duration for idle
+            sprite.setTexture(idleTexture); // Set texture immediately
+            sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight)); // Set initial frame
+            // Reapply scale
+            sprite.setScale(3.0f, 3.0f);
+            if (!facingRight) {
+                sprite.setScale(-3.0f, 3.0f);
+            }
+        }
     }
 }
 
@@ -171,7 +221,7 @@ void Enemy::updateAnimation(float deltaTime) {
         animationTimer = 0.0f;
 
         // Check if death animation is complete
-        if (currentState == EnemyState::DEAD && currentFrame >= totalFrames - 1) {
+        if (currentState == DEAD && currentFrame >= totalFrames - 1) {
             isDeathAnimationFinished = true;
             currentFrame = totalFrames - 1; // Stay on last frame
         }
@@ -180,16 +230,16 @@ void Enemy::updateAnimation(float deltaTime) {
         sf::Texture* currentTexture = nullptr;
 
         switch (currentState) {
-        case EnemyState::IDLE:
+        case IDLE:
             currentTexture = &idleTexture;
             break;
-        case EnemyState::WALKING:
+        case WALKING:
             currentTexture = &walkTexture;
             break;
-        case EnemyState::ATTACKING:
+        case ATTACKING:
             currentTexture = &attackTexture;
             break;
-        case EnemyState::DEAD:
+        case DEAD:
             currentTexture = &deadTexture;
             break;
         }
@@ -197,6 +247,11 @@ void Enemy::updateAnimation(float deltaTime) {
         if (currentTexture) {
             sprite.setTexture(*currentTexture);
             sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight));
+            // Reapply scale after changing texture
+            sprite.setScale(3.0f, 3.0f);
+            if (!facingRight) {
+                sprite.setScale(-3.0f, 3.0f);
+            }
         }
     }
 }
@@ -215,7 +270,7 @@ void Enemy::takeDamage(float damage) {
         health -= damage;
         if (health <= 0) {
             health = 0;
-            currentState = EnemyState::DEAD;
+            currentState = DEAD;
             currentFrame = 0;
             animationTimer = 0.0f;
         }
@@ -227,7 +282,7 @@ bool Enemy::isAlive() const {
 }
 
 bool Enemy::canBeRemoved() const {
-    return !isAlive() && isDeathAnimationFinished;
+    return !isAlive() && deathRemoveTimer >= deathRemoveDelay;
 }
 
 sf::Vector2f Enemy::getPosition() const {
@@ -247,7 +302,7 @@ Hitbox* Enemy::getHitbox() const {
 }
 
 bool Enemy::isAttacking() const {
-    return currentState == EnemyState::ATTACKING;
+    return currentState == ATTACKING;
 }
 
 //------------------------------------------------------------------------------
@@ -264,8 +319,8 @@ EnemyManager::EnemyManager() :
 }
 
 EnemyManager::~EnemyManager() {
-    for (auto enemy : enemies) {
-        delete enemy;
+    for (std::vector<Enemy*>::iterator it = enemies.begin(); it != enemies.end(); ++it) {
+        delete *it;
     }
     enemies.clear();
 }
@@ -278,9 +333,9 @@ void EnemyManager::init(int enemiesPerWave) {
 
 void EnemyManager::update(float deltaTime, const sf::Vector2f& playerPosition) {
     // Update existing enemies
-    for (auto& enemy : enemies) {
-        if (enemy) {
-            enemy->update(deltaTime, playerPosition);
+    for (std::vector<Enemy*>::iterator it = enemies.begin(); it != enemies.end(); ++it) {
+        if (*it) {
+            (*it)->update(deltaTime, playerPosition);
         }
     }
 
@@ -290,7 +345,7 @@ void EnemyManager::update(float deltaTime, const sf::Vector2f& playerPosition) {
         static_cast<int>(enemies.size()) < enemiesPerWave * currentWaveNumber &&
         static_cast<int>(enemies.size()) < maxEnemies) {
 
-        spawnEnemy(playerPosition.x);
+        spawnEnemy(playerPosition);
         spawnTimer = 0.0f;
     }
 
@@ -299,14 +354,14 @@ void EnemyManager::update(float deltaTime, const sf::Vector2f& playerPosition) {
 }
 
 void EnemyManager::render(sf::RenderWindow& window) {
-    for (auto& enemy : enemies) {
-        if (enemy) {
-            enemy->draw(window);
+    for (std::vector<Enemy*>::iterator it = enemies.begin(); it != enemies.end(); ++it) {
+        if (*it) {
+            (*it)->draw(window);
         }
     }
 }
 
-void EnemyManager::spawnEnemy(float playerX) {
+void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> sideDist(0, 1); // 0 for left, 1 for right
@@ -318,15 +373,15 @@ void EnemyManager::spawnEnemy(float playerX) {
     // Calculate spawn position
     float spawnX;
     if (spawnOnRight) {
-        spawnX = playerX + 1280.0f / 2.0f + offsetDist(gen); // Right side of screen
+        spawnX = playerPosition.x + 1280.0f / 2.0f + offsetDist(gen); // Right side of screen
     }
     else {
-        spawnX = playerX - 1280.0f / 2.0f - offsetDist(gen); // Left side of screen
+        spawnX = playerPosition.x - 1280.0f / 2.0f - offsetDist(gen); // Left side of screen
     }
 
     // Create and initialize new enemy
     Enemy* newEnemy = new Enemy();
-    newEnemy->init(spawnX, spawnOnRight);
+    newEnemy->init(spawnX, playerPosition.y, spawnOnRight);
     enemies.push_back(newEnemy);
 }
 
@@ -355,8 +410,8 @@ int EnemyManager::getCurrentWave() const {
 int EnemyManager::getRemainingEnemies() const {
     // Count alive enemies
     int count = 0;
-    for (const auto& enemy : enemies) {
-        if (enemy && enemy->isAlive()) {
+    for (std::vector<Enemy*>::const_iterator it = enemies.begin(); it != enemies.end(); ++it) {
+        if (*it && (*it)->isAlive()) {
             count++;
         }
     }

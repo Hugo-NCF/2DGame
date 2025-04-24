@@ -52,6 +52,19 @@ void Player::init() {
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
 
+    // Load sounds
+    if (!shootSoundBuffer.loadFromFile("Assets/shoot.mp3")) {
+        std::cerr << "Error loading shoot sound" << std::endl;
+    } else {
+        shootSound.setBuffer(shootSoundBuffer);
+    }
+
+    if (!reloadSoundBuffer.loadFromFile("Assets/reload.mp3")) {
+        std::cerr << "Error loading reload sound" << std::endl;
+    } else {
+        reloadSound.setBuffer(reloadSoundBuffer);
+    }
+
     // Position hitbox at same center
     hitbox.setPosition(playerSprite.getPosition().x, playerSprite.getPosition().y + 128.0f * 3.0f / 2.0f);
 
@@ -60,8 +73,8 @@ void Player::init() {
 void Player::update(float deltaTime) {
     bool moving = false;
     sf::Vector2f currentPosition = playerSprite.getPosition();
-    float leftBounds = 128 * 2;
-    float rightBounds = 1280 - 128 * 2;
+    float leftBounds = 100; // Expanded left barrier
+    float rightBounds = 1280 - 100; // Expanded right barrier
 
     // Moving logic for A and D keys
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {

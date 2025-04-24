@@ -5,7 +5,7 @@
 #include <vector>
 #include "Hitbox.h"
 
-enum class EnemyState {
+enum EnemyState {
     IDLE,
     WALKING,
     ATTACKING,
@@ -17,7 +17,7 @@ public:
     Enemy();
     ~Enemy();
 
-    void init(float startX, bool spawnOnRight);
+    void init(float startX, float playerY, bool spawnOnRight);
     void loadTextures();
     void initSprite();
     void update(float deltaTime, const sf::Vector2f& playerPosition);
@@ -61,6 +61,8 @@ private:
     float attackTimer;
 
     bool isDeathAnimationFinished;
+    float deathRemoveTimer;
+    float deathRemoveDelay; // e.g., 0.5 seconds
     sf::Vector2f position;
 
     Hitbox* hitbox;
@@ -82,7 +84,7 @@ public:
     bool isWaveCleared() const;
 
 private:
-    void spawnEnemy(float playerX);
+    void spawnEnemy(const sf::Vector2f& playerPosition);
     void removeDeadEnemies();
 
     std::vector<Enemy*> enemies;
