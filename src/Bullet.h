@@ -12,12 +12,14 @@ public:
     void setActive(bool active);
     sf::FloatRect getBounds() const;
     void reset(float x, float y, float speed, bool facingRight);
+    float getDamage() const;
 
 private:
     sf::RectangleShape shape;
     float speed;
     bool active;
     bool facingRight;
+    float damage;
 };
 
 class BulletManager {
@@ -29,6 +31,8 @@ public:
     void render(sf::RenderWindow& window);
     int getRemainingBullets() const;
     void reload();
+    Bullet* getBullets() const; // Add getter for bullets array
+    int getMaxBullets() const; // Add getter for maxBullets
 
 private:
     Bullet* bullets;
