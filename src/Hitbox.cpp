@@ -61,6 +61,10 @@ bool Hitbox::intersects(const sf::FloatRect& rect) const {
     return getBounds().intersects(rect);
 }
 
+bool Hitbox::checkCollision(const sf::FloatRect& otherBounds) const {
+    return shape.getGlobalBounds().intersects(otherBounds);
+}
+
 void Hitbox::draw(sf::RenderWindow& window) {
     if (active) {
         window.draw(shape);
