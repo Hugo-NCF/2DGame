@@ -9,7 +9,7 @@ Enemy::Enemy() :
     facingRight(false),
     speed(100.0f),
     health(100.0f),
-    attackDamage(10.0f),
+    attackDamage(5.0f),
     attackRange(50.0f),
     detectionRange(1000.0f),
     frameWidth(128),
@@ -23,6 +23,7 @@ Enemy::Enemy() :
     isDeathAnimationFinished(false),
     deathRemoveTimer(0.0f),
     deathRemoveDelay(1.5f), // 1.5 second delay after death animation
+    
     hitbox(nullptr)
 {
 }
