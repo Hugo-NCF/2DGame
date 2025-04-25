@@ -1,48 +1,72 @@
-#ifndef HITBOX_H
-#define HITBOX_H
+#include "Hitbox.h"
 
-#include <SFML/Graphics.hpp>
+Hitbox::Hitbox(const sf::Vector2f& size) :
+    size(size),
+    position(0.0f, 0.0f),
+    active(true)
+{
+    shape.setSize(size);
+    shape.setOrigin(size.x / 2.0f, size.y / 2.0f);  // Center the origin of the hitbox
+    shape.setPosition(position);
+    shape.setFillColor(sf::Color(255, 0, 0, 100)); // Semi-transparent red for debugging
+    shape.setOutlineColor(sf::Color::Red);
+    shape.setOutlineThickness(1.0f);
+}
 
-class Hitbox {
-public:
-    // Constructor accepts a size and optionally a position
-    Hitbox(const sf::Vector2f& size = sf::Vector2f(0.0f, 0.0f));
+Hitbox::~Hitbox() {
+    
+}
 
-    ~Hitbox();
+void Hitbox::setPosition(float x, float y) {
+    position.x = x;
+    position.y = y;
+    shape.setPosition(position);
+}
 
-    // Set the position of the hitbox
-    void setPosition(float x, float y);
-    void setPosition(const sf::Vector2f& position);
+void Hitbox::setPosition(const sf::Vector2f& position) {
+    setPosition(position.x, position.y);
+}
 
-    // Set whether the hitbox is active
-    void setActive(bool active);
+void Hitbox::setActive(bool active) {
+    this->active = active;
+}
 
-    // Get the position of the hitbox
-    sf::Vector2f getPosition() const;
+sf::Vector2f Hitbox::getPosition() const {
+    return position;
+}
 
-    // Get the size of the hitbox
-    sf::Vector2f getSize() const;
+sf::Vector2f Hitbox::getSize() const {
+    return size;
+}
 
-    // Get the global bounds of the hitbox
-    sf::FloatRect getBounds() const;
+sf::FloatRect Hitbox::getBounds() const {
+    return shape.getGlobalBounds();
+}
 
-    // Check if the hitbox is active
-    bool isActive() const;
+bool Hitbox::isActive() const {
+    return active;
+}
 
-    // Check for intersection with another hitbox
-    bool intersects(const Hitbox& other) const;
+bool Hitbox::intersects(const Hitbox& other) const {
+    if (!active || !other.isActive()) {
+        return false;
+    }
+    return getBounds().intersects(other.getBounds());
+}
 
-    // Check for intersection with a rectangle
-    bool intersects(const sf::FloatRect& rect) const;
+bool Hitbox::intersects(const sf::FloatRect& rect) const {
+    if (!active) {
+        return false;
+    }
+    return getBounds().intersects(rect);
+}
 
-    // Draw the hitbox (useful for debugging)
-    void draw(sf::RenderWindow& window);
+bool Hitbox::checkCollision(const sf::FloatRect& otherBounds) const {
+    return shape.getGlobalBounds().intersects(otherBounds);
+}
 
-private:
-    sf::RectangleShape shape;  // Shape used to represent the hitbox visually
-    sf::Vector2f size;        // Size of the hitbox
-    sf::Vector2f position;    // Position of the hitbox
-    bool active;              // Whether the hitbox is active or not
-};
-
-#endif // HITBOX_H
+void Hitbox::draw(sf::RenderWindow& window) {
+    if (active) {
+        window.draw(shape);
+    }
+}
