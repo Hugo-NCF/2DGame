@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "Hitbox.h" // Include Hitbox class
+#include "Hitbox.h"
 #include <iostream>
 
 Player::Player() :
@@ -15,7 +15,9 @@ Player::Player() :
     isReloading(false),
     reloadingTimer(0.0f),
     reloadKeyPressed(false),
-    hitbox(sf::Vector2f(100.0f, 164.0f))  // Initialize the hitbox with a custom size (e.g., 100x128)
+    hitbox(sf::Vector2f(100.0f, 164.0f)),
+    health(100.0f), // Initialize health
+    invulnerabilityTimer(0.0f) // Initialize invulnerability timer
 {
 }
 
@@ -67,7 +69,6 @@ void Player::init() {
 
     // Position hitbox at same center
     hitbox.setPosition(playerSprite.getPosition().x, playerSprite.getPosition().y + 128.0f * 3.0f / 2.0f);
-
 }
 
 void Player::update(float deltaTime) {
@@ -133,6 +134,20 @@ void Player::update(float deltaTime) {
         if (reloadSound.getStatus() == sf::Sound::Stopped) {
             setReloadingAnimation(false);
         }
+    }
+
+    // Update invulnerability timer if active
+    if (invulnerabilityTimer > 0) {
+        invulnerabilityTimer -= deltaTime;
+        
+        // Make the sprite flash when invulnerable
+        if (static_cast<int>(invulnerabilityTimer * 10) % 2 == 0) {
+            playerSprite.setColor(sf::Color(255, 255, 255, 128)); // Half transparent
+        } else {
+            playerSprite.setColor(sf::Color(255, 255, 255, 255)); // Fully visible
+        }
+    } else {
+        playerSprite.setColor(sf::Color(255, 255, 255, 255)); // Ensure full visibility
     }
 
     // Animate
@@ -263,4 +278,29 @@ void Player::setReloadingAnimation(bool isReloading) {
         }
         currentFrame = 0;
     }
+}
+
+void Player::takeDamage(float damage) {
+    // Only take damage if not invulnerable
+    if (invulnerabilityTimer <= 0) {
+        health -= damage;
+        if (health < 0) health = 0;
+        
+        // Set invulnerability for 1 second
+        invulnerabilityTimer = 1.0f;
+        
+        std::cout << "Player took " << damage << " damage. Health: " << health << std::endl;
+    }
+}
+
+float Player::getHealth() const {
+    return health;
+}
+
+bool Player::isAlive() const {
+    return health > 0;
+}
+
+Hitbox& Player::getHitbox() {
+    return hitbox;
 }
