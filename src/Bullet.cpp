@@ -3,13 +3,14 @@
 #include <iostream>
 
 // Bullet implementation
-Bullet::Bullet() : speed(0), active(false), facingRight(true) {
+Bullet::Bullet() : speed(0), active(false), facingRight(true), damage(10.0f) {
     shape.setSize(sf::Vector2f(10.f, 5.f));
     shape.setFillColor(sf::Color::Yellow);
     shape.setPosition(0, 0);
 }
 
-Bullet::Bullet(float x, float y, float speed, bool facingRight) : speed(speed), active(true), facingRight(facingRight) {
+Bullet::Bullet(float x, float y, float speed, bool facingRight) 
+    : speed(speed), active(true), facingRight(facingRight), damage(10.0f) {
     shape.setSize(sf::Vector2f(10.f, 5.f));
     shape.setFillColor(sf::Color::Yellow);
     shape.setPosition(x, y);
@@ -52,6 +53,10 @@ void Bullet::reset(float x, float y, float speed, bool facingRight) {
     shape.setPosition(x - 28, y - 18);
 }
 
+float Bullet::getDamage() const {
+    return damage;
+}
+
 // BulletManager implementation
 BulletManager::BulletManager(int maxBullets) : maxBullets(maxBullets), remainingBullets(maxBullets) {
     bullets = new Bullet[maxBullets];
@@ -74,9 +79,9 @@ void BulletManager::fireBullet(float x, float y, bool facingRight) {
     // Find an inactive bullet to reuse
     for (int i = 0; i < maxBullets; i++) {
         if (!bullets[i].isActive()) {
-            // Adjust bullet spawn position based on player’s position and facing direction
+            // Adjust bullet spawn position based on playerâ€™s position and facing direction
             float bulletOffsetX = facingRight ? -254.f : 254.f; // Adjust this based on where you want the bullet to appear
-            float bulletOffsetY = -197.f; // Adjust based on the height of the player’s weapon or shooting point
+            float bulletOffsetY = -197.f; // Adjust based on the height of the playerâ€™s weapon or shooting point
 
             bullets[i].reset(x + bulletOffsetX, y + bulletOffsetY, 600.f, facingRight);
             remainingBullets--;
@@ -111,4 +116,12 @@ int BulletManager::getRemainingBullets() const {
 void BulletManager::reload() {
     remainingBullets = maxBullets;
     std::cout << "Reloaded! Bullets: " << remainingBullets << std::endl;
+}
+
+Bullet* BulletManager::getBullets() const {
+    return bullets;
+}
+
+int BulletManager::getMaxBullets() const {
+    return maxBullets;
 }
