@@ -1,7 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
-#include <SFML/Audio.hpp> // Include SFML Audio
+#include <SFML/Audio.hpp>
 #include "Player.h"
 #include "Bullet.h"
 #include "Enemy.h"
@@ -12,6 +12,43 @@ using namespace sf;
 
 const float VIEW_WIDTH = 1280.f;
 const float VIEW_HEIGHT = 800.f;
+
+// Function to check collision between bullets and enemies
+void checkBulletEnemyCollisions(BulletManager& bulletManager, EnemyManager& enemyManager) {
+    Bullet* bullets = bulletManager.getBullets();
+    int maxBullets = bulletManager.getMaxBullets();
+    
+    for (int i = 0; i < maxBullets; i++) {
+        if (bullets[i].isActive()) {
+            for (auto& enemy : enemyManager.getEnemies()) {
+                if (enemy->isAlive() && enemy->getHitbox() && 
+                    enemy->getHitbox()->checkCollision(bullets[i].getBounds())) {
+                    // Apply damage to enemy
+                    enemy->takeDamage(bullets[i].getDamage());
+                    
+                    // Deactivate bullet
+                    bullets[i].setActive(false);
+                    
+                    break; // Break to avoid a single bullet hitting multiple enemies
+                }
+            }
+        }
+    }
+}
+
+// Function to check collision between player and enemies
+void checkPlayerEnemyCollisions(Player& player, EnemyManager& enemyManager) {
+    for (auto& enemy : enemyManager.getEnemies()) {
+        if (enemy->isAlive() && enemy->getHitbox() && 
+            enemy->getHitbox()->checkCollision(player.getHitbox().getBounds())) {
+            
+            // Only take damage if enemy is attacking
+            if (enemy->isAttacking()) {
+                player.takeDamage(enemy->getAttackDamage());
+            }
+        }
+    }
+}
 
 int main() {
     // Create the window
@@ -65,6 +102,13 @@ int main() {
     ammoText.setFillColor(sf::Color::White);
     ammoText.setPosition(10, 10);
     
+    // Health display text
+    sf::Text healthText;
+    healthText.setFont(font);
+    healthText.setCharacterSize(24);
+    healthText.setFillColor(sf::Color::White);
+    healthText.setPosition(10, 50);
+    
     // Clock for deltaTime calculation
     sf::Clock clock;
     // Main game loop
@@ -90,9 +134,8 @@ int main() {
         
         player.update(deltaTime);
         
-        
         // Handle shooting
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot && !player.getIsReloading()) { // Add check for reloading
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canShoot && !player.getIsReloading()) {
             // Get player position and direction
             float bulletX = player.isFacingRight() ?
                 player.getPosition().x + player.getSize().x - 10.0f :
@@ -113,10 +156,25 @@ int main() {
         bulletManager.update(deltaTime);
         enemyManager.update(deltaTime, player.getPosition());
         
+        // Check for collisions
+        checkBulletEnemyCollisions(bulletManager, enemyManager);
+        checkPlayerEnemyCollisions(player, enemyManager);
+        
         // Update ammo display
         std::stringstream ss;
         ss << "Ammo: " << bulletManager.getRemainingBullets() << " / 20";
         ammoText.setString(ss.str());
+        
+        // Update health display
+        std::stringstream healthSS;
+        healthSS << "Health: " << static_cast<int>(player.getHealth());
+        healthText.setString(healthSS.str());
+        
+        // Check if player is dead
+        if (!player.isAlive()) {
+            std::cout << "Game Over!" << std::endl;
+            window.close();
+        }
         
         // Clear window
         window.clear();
@@ -130,6 +188,7 @@ int main() {
         enemyManager.render(window);
         // Draw UI
         window.draw(ammoText);
+        window.draw(healthText);
         // Display everything
         window.display();
     }
