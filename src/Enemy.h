@@ -12,12 +12,17 @@ enum EnemyState {
     DEAD
 };
 
+enum EnemyType {
+    ZOMBIE_1,
+    ZOMBIE_2
+};
+
 class Enemy {
 public:
     Enemy();
     ~Enemy();
 
-    void init(float startX, float playerY, bool spawnOnRight);
+    void init(EnemyType type, float startX, float playerY, bool spawnOnRight);
     void loadTextures();
     void initSprite();
     void update(float deltaTime, const sf::Vector2f& playerPosition);
@@ -33,6 +38,8 @@ public:
     bool isAttacking() const;
 
 private:
+    EnemyType enemyType; // Add enemy type member variable
+
     void updateState(const sf::Vector2f& playerPosition);
     void updateAnimation(float deltaTime);
 

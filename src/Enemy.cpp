@@ -35,20 +35,33 @@ Enemy::~Enemy() {
 }
 
 void Enemy::loadTextures() {
-    if (!idleTexture.loadFromFile("Assets/Zombie/Idle.png")) {
-        std::cerr << "Failed to load zombie idle texture!" << std::endl;
+    std::string texturePath;
+    switch (enemyType) {
+        case ZOMBIE_1:
+            texturePath = "Assets/Zombie/";
+            break;
+        case ZOMBIE_2:
+            texturePath = "Assets/Zombie_2/";
+            break;
+        default:
+            std::cerr << "Unknown enemy type!" << std::endl;
+            return;
     }
 
-    if (!walkTexture.loadFromFile("Assets/Zombie/Walk.png")) {
-        std::cerr << "Failed to load zombie walk texture!" << std::endl;
+    if (!idleTexture.loadFromFile(texturePath + "Idle.png")) {
+        std::cerr << "Failed to load idle texture for enemy type " << enemyType << "!" << std::endl;
     }
 
-    if (!attackTexture.loadFromFile("Assets/Zombie/Attack.png")) {
-        std::cerr << "Failed to load zombie attack texture!" << std::endl;
+    if (!walkTexture.loadFromFile(texturePath + "Walk.png")) {
+        std::cerr << "Failed to load walk texture for enemy type " << enemyType << "!" << std::endl;
     }
 
-    if (!deadTexture.loadFromFile("Assets/Zombie/Dead.png")) {
-        std::cerr << "Failed to load zombie dead texture!" << std::endl;
+    if (!attackTexture.loadFromFile(texturePath + "Attack.png")) {
+        std::cerr << "Failed to load attack texture for enemy type " << enemyType << "!" << std::endl;
+    }
+
+    if (!deadTexture.loadFromFile(texturePath + "Dead.png")) {
+        std::cerr << "Failed to load dead texture for enemy type " << enemyType << "!" << std::endl;
     }
 }
 
@@ -73,7 +86,9 @@ void Enemy::initSprite() {
     }
 }
 
-void Enemy::init(float startX, float playerY, bool spawnOnRight) {
+void Enemy::init(EnemyType type, float startX, float playerY, bool spawnOnRight) {
+    enemyType = type; // Store the enemy type
+
     // Calculate initial position with y-offset to align feet with player
     position = sf::Vector2f(startX, playerY + frameHeight * 3.0f / 2.0f);
     facingRight = !spawnOnRight; // Face toward center
@@ -366,6 +381,7 @@ void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> sideDist(0, 1); // 0 for left, 1 for right
     std::uniform_real_distribution<float> offsetDist(100.0f, 300.0f);
+    std::uniform_int_distribution<> typeDist(0, 1); // 0 for ZOMBIE_1, 1 for ZOMBIE_2
 
     // Decide which side to spawn on
     bool spawnOnRight = sideDist(gen) == 1;
@@ -379,9 +395,12 @@ void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
         spawnX = playerPosition.x - 1280.0f / 2.0f - offsetDist(gen); // Left side of screen
     }
 
+    // Randomly select enemy type
+    EnemyType enemyType = static_cast<EnemyType>(typeDist(gen));
+
     // Create and initialize new enemy
     Enemy* newEnemy = new Enemy();
-    newEnemy->init(spawnX, playerPosition.y, spawnOnRight);
+    newEnemy->init(enemyType, spawnX, playerPosition.y, spawnOnRight);
     enemies.push_back(newEnemy);
 }
 
