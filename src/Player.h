@@ -17,6 +17,7 @@ public:
     sf::Vector2f getSize() const;
     bool isFacingRight() const;
     bool getIsReloading() const;
+    Hitbox& getHitbox();
 
 private:
     void setRunningAnimation(bool isRunning);
@@ -53,6 +54,8 @@ private:
     bool reloadKeyPressed;
     float shootingTimer;
     float reloadingTimer;
+    float health;
+    float invulnerabilityTimer;
 };
 
 #endif
