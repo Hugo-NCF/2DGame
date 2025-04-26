@@ -17,7 +17,18 @@ public:
     sf::Vector2f getSize() const;
     bool isFacingRight() const;
     bool getIsReloading() const;
+
+    
+    bool getIsReloading() const;
+
+    // New methods for health and combat
     Hitbox& getHitbox();
+    void takeDamage(float damage);
+    float getHealth() const;
+    bool isAlive() const;
+
+    Hitbox& getHitbox();
+
 
 private:
     void setRunningAnimation(bool isRunning);
@@ -54,6 +65,10 @@ private:
     bool reloadKeyPressed;
     float shootingTimer;
     float reloadingTimer;
+
+
+    // New member variables for health and invulnerability
+
     float health;
     float invulnerabilityTimer;
 };

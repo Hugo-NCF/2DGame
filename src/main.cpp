@@ -20,8 +20,10 @@ void checkBulletEnemyCollisions(BulletManager& bulletManager, EnemyManager& enem
     
     for (int i = 0; i < maxBullets; i++) {
         if (bullets[i].isActive()) {
-            for (auto& enemy : enemyManager.getEnemies()) {
-                if (enemy->isAlive() && enemy->getHitbox() && 
+            std::vector<Enemy*>& enemies = enemyManager.getEnemies();
+            for (size_t j = 0; j < enemies.size(); ++j) {
+                Enemy* enemy = enemies[j];
+                if (enemy->isAlive() && enemy->getHitbox() &&
                     enemy->getHitbox()->checkCollision(bullets[i].getBounds())) {
                     // Apply damage to enemy
                     enemy->takeDamage(bullets[i].getDamage());
@@ -38,10 +40,12 @@ void checkBulletEnemyCollisions(BulletManager& bulletManager, EnemyManager& enem
 
 // Function to check collision between player and enemies
 void checkPlayerEnemyCollisions(Player& player, EnemyManager& enemyManager) {
-    for (auto& enemy : enemyManager.getEnemies()) {
-        if (enemy->isAlive() && enemy->getHitbox() && 
+    std::vector<Enemy*>& enemies = enemyManager.getEnemies();
+    for (size_t i = 0; i < enemies.size(); ++i) {
+        Enemy* enemy = enemies[i];
+        if (enemy->isAlive() && enemy->getHitbox() &&
             enemy->getHitbox()->checkCollision(player.getHitbox().getBounds())) {
-            
+
             // Only take damage if enemy is attacking
             if (enemy->isAttacking()) {
                 player.takeDamage(enemy->getAttackDamage());

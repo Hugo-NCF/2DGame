@@ -8,7 +8,7 @@ Hitbox::Hitbox(const sf::Vector2f& size) :
     shape.setSize(size);
     shape.setOrigin(size.x / 2.0f, size.y / 2.0f);  // Center the origin of the hitbox
     shape.setPosition(position);
-    shape.setFillColor(sf::Color(255, 0, 0, 100)); // Semi-transparent red for debugging
+    shape.setFillColor(sf::Color(0, 0, 255, 100)); // Semi-transparent blue for debugging
     shape.setOutlineColor(sf::Color::Red);
     shape.setOutlineThickness(1.0f);
 }
