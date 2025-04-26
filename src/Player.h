@@ -18,13 +18,15 @@ public:
     bool isFacingRight() const;
     bool getIsReloading() const;
     
-        // New methods for health and combat
-        Hitbox& getHitbox();
-        void takeDamage(float damage);
-        float getHealth() const;
-        bool isAlive() const;
-    
-    private:
+    bool getIsReloading() const;
+
+    // New methods for health and combat
+    Hitbox& getHitbox();
+    void takeDamage(float damage);
+    float getHealth() const;
+    bool isAlive() const;
+
+private:
     void setRunningAnimation(bool isRunning);
     void setShootingAnimation(bool isShooting);
     void setReloadingAnimation(bool isReloading);
