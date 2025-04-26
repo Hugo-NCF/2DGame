@@ -112,6 +112,13 @@ int main() {
     healthText.setCharacterSize(24);
     healthText.setFillColor(sf::Color::White);
     healthText.setPosition(10, 50);
+
+    // Wave display text
+    sf::Text waveText;
+    waveText.setFont(font);
+    waveText.setCharacterSize(30);
+    waveText.setFillColor(sf::Color::White);
+    waveText.setPosition(VIEW_WIDTH - 200, 10); // Top-right corner
     
     // Clock for deltaTime calculation
     sf::Clock clock;
@@ -173,12 +180,29 @@ int main() {
         std::stringstream healthSS;
         healthSS << "Health: " << static_cast<int>(player.getHealth());
         healthText.setString(healthSS.str());
+
+        std::stringstream waveStream;
+        waveStream << "Wave: " << enemyManager.getCurrentWave();
+        waveText.setString(waveStream.str());
         
         // Check if player is dead
         if (!player.isAlive()) {
-            std::cout << "Game Over!" << std::endl;
+            // Display game over screen or message
+            sf::Text gameOverText;
+            gameOverText.setFont(font);
+            gameOverText.setString("Game Over!");
+            gameOverText.setCharacterSize(48);
+            gameOverText.setFillColor(sf::Color::Red);
+            gameOverText.setPosition(window.getSize().x / 2 - 150, window.getSize().y / 2 - 50);
+
+            window.clear();
+            window.draw(backgroundSprite);
+            window.draw(gameOverText);
+            window.display();
+            sf::sleep(sf::seconds(2)); // Pause for 2 seconds before closing
             window.close();
         }
+
         
         // Clear window
         window.clear();
@@ -193,6 +217,7 @@ int main() {
         // Draw UI
         window.draw(ammoText);
         window.draw(healthText);
+        window.draw(waveText);
         // Display everything
         window.display();
     }

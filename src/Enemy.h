@@ -80,7 +80,7 @@ public:
     EnemyManager();
     ~EnemyManager();
 
-    void init(int enemiesPerWave);
+    void init();
     void update(float deltaTime, const sf::Vector2f& playerPosition);
     void render(sf::RenderWindow& window);
 
@@ -96,11 +96,17 @@ private:
 
     std::vector<Enemy*> enemies;
 
+    sf::Text waveTransitionText;
+    sf::Font waveFont;
+
     float spawnTimer;
     float spawnInterval;
     int maxEnemies;
+    float waveDelayTimer;
+    float waveDelay;
+    bool isWaveTransitioning; 
     int currentWaveNumber;
-    int enemiesPerWave;
+    int enemiesKilledThisWave;
 };
 
 #endif // ENEMY_H

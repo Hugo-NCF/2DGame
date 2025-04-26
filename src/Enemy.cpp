@@ -90,6 +90,19 @@ void Enemy::initSprite() {
 void Enemy::init(EnemyType type, float startX, float playerY, bool spawnOnRight) {
     enemyType = type; // Store the enemy type
 
+    // Set different speed for each type
+    switch (enemyType) {
+    case ZOMBIE_1:
+        speed = 100.0f;
+        break;
+    case ZOMBIE_2:
+        speed = 150.0f; // Faster zombie
+        break;
+    default:
+        speed = 100.0f;
+        break;
+    }
+
     // Calculate initial position with y-offset to align feet with player
     position = sf::Vector2f(startX, playerY + frameHeight * 3.0f / 2.0f);
     facingRight = !spawnOnRight; // Face toward center
@@ -329,10 +342,12 @@ EnemyManager::EnemyManager() :
     spawnTimer(0.0f),
     spawnInterval(2.0f),
     maxEnemies(20),
+    waveDelayTimer(0.0f),
+    waveDelay(3.0f),
+    isWaveTransitioning(false),
     currentWaveNumber(1),
-    enemiesPerWave(5)
-{
-}
+    enemiesKilledThisWave(0)
+{}
 
 EnemyManager::~EnemyManager() {
     for (std::vector<Enemy*>::iterator it = enemies.begin(); it != enemies.end(); ++it) {
@@ -341,32 +356,63 @@ EnemyManager::~EnemyManager() {
     enemies.clear();
 }
 
-void EnemyManager::init(int enemiesPerWave) {
-    this->enemiesPerWave = enemiesPerWave;
+void EnemyManager::init() {
     currentWaveNumber = 1;
     spawnInterval = 2.0f;
+
+    // Load font for wave transition text
+    if (!waveFont.loadFromFile("Assets/pixelFont.ttf")) { // Replace with your actual font path
+        std::cerr << "Failed to load font!" << std::endl;
+    }
+
+    // Set up wave transition text properties
+    waveTransitionText.setFont(waveFont);
+    waveTransitionText.setCharacterSize(50);  // Font size
+    waveTransitionText.setFillColor(sf::Color::White);  // Text color
+    waveTransitionText.setString("Wave 1"); // Initial wave text
+    waveTransitionText.setPosition(640, 360);  // Centered position on screen
 }
 
+
 void EnemyManager::update(float deltaTime, const sf::Vector2f& playerPosition) {
+    // If wave transition is in progress, update the delay timer
+    if (isWaveTransitioning) {
+        waveDelayTimer += deltaTime;
+
+        // Set wave transition text based on the current wave
+        waveTransitionText.setString("Wave " + std::to_string(currentWaveNumber));
+
+        if (waveDelayTimer >= waveDelay) {
+            // End wave transition, allow spawning enemies
+            isWaveTransitioning = false;
+            waveDelayTimer = 0.0f; // Reset the timer
+        }
+        return; // Skip further updates if wave transition is in progress
+    }
+
     // Update existing enemies
-    for (std::vector<Enemy*>::iterator it = enemies.begin(); it != enemies.end(); ++it) {
-        if (*it) {
-            (*it)->update(deltaTime, playerPosition);
+    for (auto& enemy : enemies) {
+        if (enemy) {
+            enemy->update(deltaTime, playerPosition);
         }
     }
 
     // Handle enemy spawning
     spawnTimer += deltaTime;
-    if (spawnTimer >= spawnInterval &&
-        static_cast<int>(enemies.size()) < enemiesPerWave * currentWaveNumber &&
-        static_cast<int>(enemies.size()) < maxEnemies) {
-
+    if (spawnTimer >= spawnInterval && static_cast<int>(enemies.size()) < maxEnemies) {
         spawnEnemy(playerPosition);
         spawnTimer = 0.0f;
     }
 
     // Remove dead enemies
     removeDeadEnemies();
+
+    // Checks for wave increase
+    if (enemiesKilledThisWave >= 10 * currentWaveNumber) {
+        increaseWave();
+        enemiesKilledThisWave = 0;
+        isWaveTransitioning = true; // Start wave transition
+    }
 }
 
 void EnemyManager::render(sf::RenderWindow& window) {
@@ -375,6 +421,12 @@ void EnemyManager::render(sf::RenderWindow& window) {
             (*it)->draw(window);
         }
     }
+
+    // If wave transition is in progress, draw wave transition text
+    if (isWaveTransitioning) {
+        std::cout << "Drawing transition text\n";
+        window.draw(waveTransitionText);
+    }
 }
 
 void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
@@ -382,7 +434,9 @@ void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> sideDist(0, 1); // 0 for left, 1 for right
     std::uniform_real_distribution<float> offsetDist(100.0f, 300.0f);
-    std::uniform_int_distribution<> typeDist(0, 1); // 0 for ZOMBIE_1, 1 for ZOMBIE_2
+
+    // Determine which enemy types to spawn based on current wave
+    std::uniform_int_distribution<> typeDist(0, (currentWaveNumber > 1 ? 1 : 0));
 
     // Decide which side to spawn on
     bool spawnOnRight = sideDist(gen) == 1;
@@ -396,18 +450,22 @@ void EnemyManager::spawnEnemy(const sf::Vector2f& playerPosition) {
         spawnX = playerPosition.x - 1280.0f / 2.0f - offsetDist(gen); // Left side of screen
     }
 
-    // Randomly select enemy type
+    // Randomly select enemy type based on current wave
     EnemyType enemyType = static_cast<EnemyType>(typeDist(gen));
 
     // Create and initialize new enemy
     Enemy* newEnemy = new Enemy();
     newEnemy->init(enemyType, spawnX, playerPosition.y, spawnOnRight);
+
     enemies.push_back(newEnemy);
 }
 
 void EnemyManager::removeDeadEnemies() {
     for (size_t i = 0; i < enemies.size(); /* no increment */) {
         if (enemies[i]->canBeRemoved()) {
+            if (!enemies[i]->isAlive()) {
+                enemiesKilledThisWave++;
+            }
             delete enemies[i];
             enemies.erase(enemies.begin() + i);
         }
@@ -420,8 +478,18 @@ void EnemyManager::removeDeadEnemies() {
 void EnemyManager::increaseWave() {
     currentWaveNumber++;
     // Make spawning faster as waves progress
-    spawnInterval = std::max(0.5f, spawnInterval * 0.9f);
+    spawnInterval = std::max(0.5f, spawnInterval * 0.5f);
+
+    isWaveTransitioning = true;
+    waveDelayTimer = 0.0f;  // Reset the timer for the next transition
+
+    for (Enemy* enemy : enemies) {
+        if (enemy && enemy->isAlive()) {
+            enemy->takeDamage(9999.0f);
+        }
+    }
 }
+
 
 int EnemyManager::getCurrentWave() const {
     return currentWaveNumber;
@@ -443,6 +511,5 @@ std::vector<Enemy*>& EnemyManager::getEnemies() {
 }
 
 bool EnemyManager::isWaveCleared() const {
-    return getRemainingEnemies() == 0 &&
-        static_cast<int>(enemies.size()) >= enemiesPerWave * currentWaveNumber;
+    return enemiesKilledThisWave >= 10 * currentWaveNumber;
 }
