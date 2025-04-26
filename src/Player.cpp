@@ -206,7 +206,7 @@ void Player::draw(sf::RenderWindow& window) {
     window.draw(playerSprite);
 
     // Draw hitbox for debugging
-    hitbox.draw(window);
+    // hitbox.draw(window);
 }
 
 sf::Sprite& Player::getSprite() {

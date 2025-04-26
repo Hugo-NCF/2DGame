@@ -50,7 +50,7 @@ void Bullet::reset(float x, float y, float speed, bool facingRight) {
     this->speed = speed;
     this->active = true;
     this->facingRight = facingRight;
-    shape.setPosition(x - 28, y - 18);
+    shape.setPosition(x, y);
 }
 
 float Bullet::getDamage() const {
@@ -81,7 +81,7 @@ void BulletManager::fireBullet(float x, float y, bool facingRight) {
         if (!bullets[i].isActive()) {
             // Adjust bullet spawn position based on player’s position and facing direction
             float bulletOffsetX = facingRight ? -254.f : 254.f; // Adjust this based on where you want the bullet to appear
-            float bulletOffsetY = -197.f; // Adjust based on the height of the player’s weapon or shooting point
+            float bulletOffsetY = -217.f; // Adjusted based on the height of the player’s weapon or shooting point
 
             bullets[i].reset(x + bulletOffsetX, y + bulletOffsetY, 600.f, facingRight);
             remainingBullets--;

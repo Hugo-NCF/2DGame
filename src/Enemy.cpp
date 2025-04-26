@@ -8,7 +8,7 @@ Enemy::Enemy() :
     currentState(IDLE),
     facingRight(false),
     speed(100.0f),
-    health(100.0f),
+    health(30.0f),
     attackDamage(5.0f),
     attackRange(50.0f),
     detectionRange(1000.0f),
@@ -22,7 +22,7 @@ Enemy::Enemy() :
     attackTimer(0.0f),
     isDeathAnimationFinished(false),
     deathRemoveTimer(0.0f),
-    deathRemoveDelay(1.5f), // 1.5 second delay after death animation
+    deathRemoveDelay(0.5f), // 0.5 second delay after death animation
     
     hitbox(nullptr)
 {
@@ -98,8 +98,8 @@ void Enemy::init(EnemyType type, float startX, float playerY, bool spawnOnRight)
     initSprite();
 
     // Create hitbox
-    hitbox = new Hitbox(sf::Vector2f(40.0f, 100.0f)); // Smaller than the sprite
-    hitbox->setPosition(position.x, position.y - 50.0f);
+    hitbox = new Hitbox(sf::Vector2f(100.0f, 164.0f)); // Same size as player hitbox
+    hitbox->setPosition(position.x, position.y - 100.0f);
 
     // Initialize animation for idle
     currentState = IDLE;
@@ -154,7 +154,7 @@ void Enemy::update(float deltaTime, const sf::Vector2f& playerPosition) {
 
     // Update hitbox position
     if (hitbox) {
-        hitbox->setPosition(position.x, position.y - 50.0f);
+        hitbox->setPosition(position.x, position.y - 100.0f);
     }
 }
 
@@ -298,7 +298,7 @@ bool Enemy::isAlive() const {
 }
 
 bool Enemy::canBeRemoved() const {
-    return !isAlive() && deathRemoveTimer >= deathRemoveDelay;
+    return isDeathAnimationFinished;
 }
 
 sf::Vector2f Enemy::getPosition() const {
