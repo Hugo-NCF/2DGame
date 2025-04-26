@@ -16,19 +16,13 @@ public:
     sf::Vector2f getPosition() const;
     sf::Vector2f getSize() const;
     bool isFacingRight() const;
-    bool getIsReloading() const;
-
-    
-    bool getIsReloading() const;
+    bool getIsReloading() const; // Added missing declaration
 
     // New methods for health and combat
-    Hitbox& getHitbox();
+    Hitbox& getHitbox(); // Added missing declaration
     void takeDamage(float damage);
     float getHealth() const;
     bool isAlive() const;
-
-    Hitbox& getHitbox();
-
 
 private:
     void setRunningAnimation(bool isRunning);
@@ -66,9 +60,7 @@ private:
     float shootingTimer;
     float reloadingTimer;
 
-
     // New member variables for health and invulnerability
-
     float health;
     float invulnerabilityTimer;
 };
