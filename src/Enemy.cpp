@@ -110,9 +110,16 @@ void Enemy::init(EnemyType type, float startX, float playerY, bool spawnOnRight)
     loadTextures();
     initSprite();
 
-    // Create hitbox
-    hitbox = new Hitbox(sf::Vector2f(100.0f, 164.0f)); // Same size as player hitbox
-    hitbox->setPosition(position.x, position.y - 100.0f);
+    // Load death sound
+    if (!deathSoundBuffer.loadFromFile("Assets/zombiedeath.mp3")) {
+        std::cerr << "Error loading zombie death sound" << std::endl;
+    } else {
+        deathSound.setBuffer(deathSoundBuffer);
+    }
+ 
+     // Create hitbox
+     hitbox = new Hitbox(sf::Vector2f(100.0f, 164.0f)); // Same size as player hitbox
+     hitbox->setPosition(position.x, position.y - 100.0f);
 
     // Initialize animation for idle
     currentState = IDLE;
@@ -302,6 +309,7 @@ void Enemy::takeDamage(float damage) {
             currentState = DEAD;
             currentFrame = 0;
             animationTimer = 0.0f;
+            deathSound.play(); // Play death sound
         }
     }
 }

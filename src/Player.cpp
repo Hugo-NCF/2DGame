@@ -15,9 +15,11 @@ Player::Player() :
     isReloading(false),
     reloadingTimer(0.0f),
     reloadKeyPressed(false),
+    isDead(false), // Initialize death state
     hitbox(sf::Vector2f(100.0f, 164.0f)),
     health(100.0f), // Initialize health
-    invulnerabilityTimer(0.0f) // Initialize invulnerability timer
+    invulnerabilityTimer(0.0f), // Initialize invulnerability timer
+    deathAnimationTimer(0.0f) // Initialize death animation timer
 {
 }
 
@@ -38,6 +40,10 @@ void Player::init() {
         std::cerr << "Error loading reload texture" << std::endl;
         return;
     }
+    if (!deathTexture.loadFromFile("Assets/Player/Dead.png")) { // Load death texture
+        std::cerr << "Error loading death texture" << std::endl;
+        return;
+    }
 
     // Set the origin to center of 128x128 texture before scaling
     playerSprite.setOrigin(64.f, 64.f); // Center of the sprite (128 / 2)
@@ -51,6 +57,7 @@ void Player::init() {
     runFrameRect = sf::IntRect(0, 0, 128, 128);
     shootFrameRect = sf::IntRect(0, 0, 128, 128);
     reloadFrameRect = sf::IntRect(0, 0, 128, 128);
+    deathFrameRect = sf::IntRect(0, 0, 128, 128); // Initialize death frame rectangle
     playerSprite.setTexture(idleTexture);
     playerSprite.setTextureRect(idleFrameRect);
 
@@ -60,18 +67,46 @@ void Player::init() {
     } else {
         shootSound.setBuffer(shootSoundBuffer);
     }
-
-    if (!reloadSoundBuffer.loadFromFile("Assets/reload.mp3")) {
-        std::cerr << "Error loading reload sound" << std::endl;
+ 
+     if (!reloadSoundBuffer.loadFromFile("Assets/reload.mp3")) {
+         std::cerr << "Error loading reload sound" << std::endl;
+         } else {
+         reloadSound.setBuffer(reloadSoundBuffer);
+         }
+ 
+    // Load death sound
+    if (!deathSoundBuffer.loadFromFile("Assets/playerdeath.mp3")) {
+        std::cerr << "Error loading death sound" << std::endl;
     } else {
-        reloadSound.setBuffer(reloadSoundBuffer);
+        deathSound.setBuffer(deathSoundBuffer);
     }
 
-    // Position hitbox at same center
+     // Position hitbox at same center
     hitbox.setPosition(playerSprite.getPosition().x, playerSprite.getPosition().y + 128.0f * 3.0f / 2.0f);
 }
 
 void Player::update(float deltaTime) {
+    if (!isAlive() && !isDead) { // Check if player just died
+        setDeathAnimation(true);
+        deathAnimationTimer = 0.0f; // Start the death animation timer
+    }
+
+    if (isDead) {
+        deathAnimationTimer += deltaTime; // Increment death animation timer
+        // Update death animation frames
+        frameTimer += deltaTime;
+        if (frameTimer >= frameDuration) {
+            frameTimer = 0.0f;
+            currentFrame = (currentFrame + 1); // Don't loop death animation
+            if (currentFrame >= frameCount) {
+                currentFrame = frameCount - 1; // Hold on last frame
+            }
+        }
+        deathFrameRect.left = currentFrame * 128;
+        playerSprite.setTextureRect(deathFrameRect);
+        return; // Stop updating other animations and movement if dead
+    }
+
     bool moving = false;
     sf::Vector2f currentPosition = playerSprite.getPosition();
     float leftBounds = 100; // Expanded left barrier
@@ -104,13 +139,13 @@ void Player::update(float deltaTime) {
     // Handle shooting key
     if (isReloading) {
         // Do nothing if reloading
-    }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-        if (!isShooting) {
-            setShootingAnimation(true);
-            shootSound.play();
         }
-    }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+            if (!isShooting) {
+                setShootingAnimation(true);
+                shootSound.play();
+            }
+        }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !reloadKeyPressed && !isReloading) {
         setReloadingAnimation(true);
@@ -141,6 +176,7 @@ void Player::update(float deltaTime) {
         invulnerabilityTimer -= deltaTime;
         
         // Make the sprite flash when invulnerable
+        // Make the sprite flash when invulnerable
         if (static_cast<int>(invulnerabilityTimer * 10) % 2 == 0) {
             playerSprite.setColor(sf::Color(255, 255, 255, 128)); // Half transparent
         } else {
@@ -162,7 +198,10 @@ void Player::update(float deltaTime) {
 
     // Decide which frameRect to use
     sf::IntRect* currentRect;
-    if (isShooting) {
+    if (isDead) { // Prioritize death animation
+        currentRect = &deathFrameRect;
+    }
+    else if (isShooting) {
         currentRect = &shootFrameRect;
     }
     else if (isReloading) {
@@ -280,6 +319,23 @@ void Player::setReloadingAnimation(bool isReloading) {
     }
 }
 
+void Player::setDeathAnimation(bool isDead) {
+    if (this->isDead != isDead) {
+        this->isDead = isDead;
+        if (isDead) {
+            playerSprite.setTexture(deathTexture);
+            frameCount = 4; // Assuming 4 frames for death animation
+            frameDuration = 0.15f; // Adjust duration as needed
+           deathSound.play(); // Play death sound
+            currentFrame = 0;
+            // Stop other animations
+            isRunning = false;
+            isShooting = false;
+            isReloading = false;
+        }
+    }
+}
+
 void Player::takeDamage(float damage) {
     // Only take damage if not invulnerable
     if (invulnerabilityTimer <= 0) {
@@ -299,6 +355,12 @@ float Player::getHealth() const {
 
 bool Player::isAlive() const {
     return health > 0;
+}
+
+bool Player::isDeathAnimationComplete() const {
+    // Assuming death animation has 4 frames and frameDuration is 0.15f
+    // The total duration of the death animation is frameCount * frameDuration
+    return isDead && deathAnimationTimer >= (frameCount * frameDuration);
 }
 
 Hitbox& Player::getHitbox() {

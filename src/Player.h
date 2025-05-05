@@ -23,6 +23,8 @@ public:
     void takeDamage(float damage);
     float getHealth() const;
     bool isAlive() const;
+    void setDeathAnimation(bool isDead); // Added death animation method
+    bool isDeathAnimationComplete() const; // Added method to check if death animation is complete
 
 private:
     void setRunningAnimation(bool isRunning);
@@ -34,17 +36,21 @@ private:
     sf::Texture runTexture;
     sf::Texture shootTexture;
     sf::Texture reloadTexture;
+    sf::Texture deathTexture; // Added death texture
 
     sf::IntRect idleFrameRect;
     sf::IntRect runFrameRect;
     sf::IntRect shootFrameRect;
     sf::IntRect reloadFrameRect;
+    sf::IntRect deathFrameRect; // Added death frame rectangle
 
     Hitbox hitbox;  // Custom hitbox for the player
     sf::SoundBuffer shootSoundBuffer;
     sf::Sound shootSound;
     sf::SoundBuffer reloadSoundBuffer;
     sf::Sound reloadSound;
+    sf::SoundBuffer deathSoundBuffer; // Added death sound buffer
+    sf::Sound deathSound; // Added death sound
 
     int frameCount;
     int currentFrame;
@@ -59,10 +65,12 @@ private:
     bool reloadKeyPressed;
     float shootingTimer;
     float reloadingTimer;
+    bool isDead; // Added flag for death state
 
     // New member variables for health and invulnerability
     float health;
     float invulnerabilityTimer;
+    float deathAnimationTimer; // Added timer for death animation delay
 };
 
 #endif
