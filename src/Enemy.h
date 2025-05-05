@@ -2,6 +2,7 @@
 #define ENEMY_H
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> // Added SFML Audio header
 #include <vector>
 #include "Hitbox.h"
 
@@ -71,6 +72,9 @@ private:
     float deathRemoveTimer;
     float deathRemoveDelay; // e.g., 0.5 seconds
     sf::Vector2f position;
+
+    sf::SoundBuffer deathSoundBuffer; // Added death sound buffer
+    sf::Sound deathSound; // Added death sound
 
     Hitbox* hitbox;
 };

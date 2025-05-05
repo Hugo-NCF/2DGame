@@ -185,8 +185,8 @@ int main() {
         waveStream << "Wave: " << enemyManager.getCurrentWave();
         waveText.setString(waveStream.str());
         
-        // Check if player is dead
-        if (!player.isAlive()) {
+        // Check if player is dead and death animation is complete
+        if (!player.isAlive() && player.isDeathAnimationComplete()) {
             // Display game over screen or message
             sf::Text gameOverText;
             gameOverText.setFont(font);
